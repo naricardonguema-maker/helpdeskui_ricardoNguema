@@ -3,7 +3,7 @@ import tkinter as tk
 from models import TicketManager
 from views import HelpdeskUI
 
-def main() -> None:
+def main():
     """Configuramos la ventana raiz e iniciamos el bucle de eventos (mainloop)."""
     root = tk.Tk()
 
