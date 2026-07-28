@@ -1,19 +1,12 @@
-#MODULO 3:
 import tkinter as tk
 from models import TicketManager
 from views import HelpdeskUI
 
-def main():
-    """Configuramos la ventana raiz e iniciamos el bucle de eventos (mainloop)."""
+def main() -> None:
+    """Orquesta el arranque de la aplicación inicializando datos y la interfaz."""
+    manager = TicketManager()
     root = tk.Tk()
-
-    # Inicializacion del gestor de persistencia de datos
-    manager = TicketManager("tickets.json")
-    
-    # Inyeccion de dependencias (hacia la interfaz)
-    app = HelpdeskUI(root, manager)
-
-    # Iniciamos el bucle de eventos
+    app = HelpdeskUI(parent=root, manager=manager)
     root.mainloop()
 
 if __name__ == "__main__":
