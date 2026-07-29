@@ -10,7 +10,7 @@ import tkinter as tk
 from models import TicketManager
 from views import HelpdeskUI
 
-def main() -> None:
+def main():
 
     ''' Arranque de la aplicación inicializando datos y la interfaz. '''
 

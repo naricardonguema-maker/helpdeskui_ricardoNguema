@@ -13,7 +13,7 @@ class HelpdeskUI(ttk.Frame):
         parent.geometry("980x600")
         parent.configure(bg="#F3F4F6") # Fondo de la ventana principal
         
-        self.pack(fill=tk.BOTH, expand=True, padx=15, py=15)
+        self.pack(fill=tk.BOTH, expand=True, padx=15, pady=15)
         
         self._setup_styles()
         self._build_ui()
