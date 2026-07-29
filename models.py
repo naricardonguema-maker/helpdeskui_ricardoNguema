@@ -1,7 +1,10 @@
-import json
-import os
-from typing import List, Dict, Any, Optional
-
+# ======================================= #
+# ----------- Manejo de Datos ----------- #
+# ======================================= #
+""" 
+Estas herramientas nos permiten trabajar con el sistema operativo, 
+manejar archivos de datos.
+"""
 import os
 import json
 from typing import List, Dict, Any
