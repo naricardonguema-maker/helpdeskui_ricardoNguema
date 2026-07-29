@@ -16,7 +16,7 @@ class HelpdeskUI:
         self.root = root
         self.manager = manager
 
-        self.root.title("IT Helpdesk System - Gestión de tickets")
+        self.root.title(" Helpdesk System - Gestión de tickets")
         self.root.geometry("950x650")
         self.root.minsize(850, 550)
         
@@ -32,16 +32,23 @@ class HelpdeskUI:
         self.style.configure("TLabelframe", background="#f5f5dc")
         self.style.configure("TLabelframe.Label", background="#f5f5dc", font=("Segoe UI", 10, "bold"))
 
-        # 2. DEFINICIÓN DE ESTILOS PARA LOS BOTONES (Madera de roble y otros tonos)
-        # Botón principal / Crear Ticket: Madera de roble (#b8860b / #a0522d)
+        # 2. CONFIGURACIÓN DEL ENCABEZADO DE LA TABLA (Azul Marino)
+        self.style.configure(
+            "Treeview.Heading", 
+            background="#001F3F",       # Azul marino oscuro
+            foreground="white",         # Letras blancas para contraste
+            font=("Segoe UI", 10, "bold")
+        )
+        # Evita que el color cambie bruscamente de manera extraña al pasar el cursor (hover)
+        self.style.map("Treeview.Heading", background=[("active", "#002a54")])
+
+        # 3. DEFINICIÓN DE ESTILOS PARA LOS BOTONES (Madera de roble y otros tonos)
         self.style.configure("Oak.TButton", background="#cd853f", foreground="white", font=("Segoe UI", 9, "bold"))
         self.style.map("Oak.TButton", background=[("active", "#8b5a2b")])
 
-        # Estilo para Cambiar Estado (Azul)
         self.style.configure("Action.TButton", background="#3498db", foreground="white", font=("Segoe UI", 9, "bold"))
         self.style.map("Action.TButton", background=[("active", "#2980b9")])
 
-        # Estilo para Eliminar Ticket (Rojo)
         self.style.configure("Danger.TButton", background="#e74c3c", foreground="white", font=("Segoe UI", 9, "bold"))
         self.style.map("Danger.TButton", background=[("active", "#c0392b")])
 
@@ -51,9 +58,11 @@ class HelpdeskUI:
     def _crear_interfaz(self):
         header = ttk.Frame(self.root, padding=12)
         header.pack(fill=tk.X)
+        
+        # TÍTULO MODIFICADO CON ICONOS UNICODE (Llave inglesa y pulgar arriba)
         ttk.Label(
             header,
-            text="DASHBOARD DE SOPORTE TÉCNICO",
+            text="🔧 DASHBOARD DE SOPORTE TÉCNICO 👍",
             font=("Segoe UI", 16, "bold")
         ).pack(side=tk.LEFT)
 
@@ -94,7 +103,7 @@ class HelpdeskUI:
         self.cmb_prioridad.set("Baja")
         self.cmb_prioridad.pack(fill=tk.X, pady=(0, 10))
 
-        # BOTONES DEL FORMULARIO CON ESTILO MADERA APLICADO
+        # Botones con estilo madera de roble
         ttk.Button(frame, text="Crear Ticket", style="Oak.TButton", command=self._on_crear).pack(fill=tk.X, pady=(0, 5))
         ttk.Button(frame, text="Limpiar Campos", command=self._limpiar_formulario).pack(fill=tk.X)
 
@@ -118,6 +127,7 @@ class HelpdeskUI:
         columns = ("id", "usuario", "descripcion", "categoria", "prioridad", "estado")
         self.tree = ttk.Treeview(tree_frame, columns=columns, show="headings", selectmode="browse")
 
+        # Asignación de nombres a las cabeceras (ahora serán Azul Marino automáticamente)
         self.tree.heading("id", text="ID")
         self.tree.heading("usuario", text="Usuario")
         self.tree.heading("descripcion", text="Descripción")
