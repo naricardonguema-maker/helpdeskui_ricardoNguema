@@ -1,10 +1,19 @@
+# ======================================= #
+# Creación de Interfaz visual con Tkinter #
+# ======================================= #
+"""
+Aquí nos encargamos exclusivamente de lo que el usuario ve y de escuchar sus interacciones con la interfaz.
+Las líneas de código siguientes sirven para importar herramientas externas al archivo de Python. Al importarlas, 
+podemos usarlas para construir la interfaz gráfica de la aplicación y gestionar los datos sin tener que escribir 
+todo el código desde cero.
+"""
 import tkinter as tk
 from tkinter import ttk, messagebox
 from typing import Optional, List
 from models import TicketManager, Ticket
 
 class HelpdeskUI(ttk.Frame):
-    """Capa de interfaz gráfica con estilos corporativos aplicados mediante .pack()."""
+
     def __init__(self, parent: tk.Tk, manager: TicketManager) -> None:
         super().__init__(parent)
         self.manager = manager
