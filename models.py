@@ -2,6 +2,10 @@ import json
 import os
 from typing import List, Dict, Any, Optional
 
+import os
+import json
+from typing import List, Dict, Any
+
 class Ticket:
     """Entidad que representa una incidencia técnica."""
     def __init__(self, id_t: int, user: str, desc: str, cat: str, prio: str, status: str = "Pendiente") -> None:
@@ -39,27 +43,50 @@ class TicketManager:
         with open(self.path, "w", encoding="utf-8") as f:
             json.dump([t.to_dict() for t in self.tickets], f, indent=4, ensure_ascii=False)
 
-    def create(self, user: str, desc: str, cat: str, prio: str) -> None:
+    # Nombre adaptado a views.py (Retorna el ticket creado para el cuadro de éxito)
+    def crear_ticket(self, usuario: str, descripcion: str, categoria: str, prioridad: str) -> Ticket:
         nid = max([t.id for t in self.tickets], default=0) + 1
-        self.tickets.append(Ticket(nid, user, desc, cat, prio))
+        nuevo_ticket = Ticket(nid, usuario, descripcion, categoria, prioridad)
+        self.tickets.append(nuevo_ticket)
         self.save()
+        return nuevo_ticket
 
-    def update_status(self, id_t: int, status: str) -> bool:
+    # Nombre adaptado a views.py e implementa el ciclo de estados automáticamente
+    def cambiar_estado(self, id_t: int) -> bool:
         for t in self.tickets:
             if t.id == id_t:
-                t.estado = status
+                # Si está Pendiente pasa a Resuelto, si está Resuelto vuelve a Pendiente
+                t.estado = "Resuelto" if t.estado == "Pendiente" else "Pendiente"
                 self.save()
                 return True
         return False
 
-    def delete(self, id_t: int) -> bool:
+    # Nombre adaptado a views.py
+    def eliminar_ticket(self, id_t: int) -> bool:
         self.tickets = [t for t in self.tickets if t.id != id_t]
         self.save()
         return True
 
-    def metrics(self) -> Dict[str, int]:
+    # Nombre adaptado a views.py
+    def obtener_metricas(self) -> Dict[str, int]:
         return {
             "total": len(self.tickets),
             "pendientes": sum(1 for t in self.tickets if t.estado == "Pendiente"),
             "resueltos": sum(1 for t in self.tickets if t.estado == "Resuelto")
         }
+
+    # NUEVO MÉTODO requerido por views.py para listar y filtrar en tiempo real
+    def actualizar_tabla(self, criterio: str = "") -> List[Ticket]:
+        """Filtra y retorna los tickets según el cuadro de búsqueda."""
+        if not criterio:
+            return self.tickets
+            
+        criterio = criterio.lower()
+        return [
+            t for t in self.tickets 
+            if criterio in t.usuario.lower() 
+            or criterio in t.descripcion.lower() 
+            or criterio in t.categoria.lower()
+            or criterio in t.prioridad.lower()
+            or criterio in t.estado.lower()
+        ]

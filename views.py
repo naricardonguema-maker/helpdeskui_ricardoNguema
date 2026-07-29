@@ -9,174 +9,212 @@ todo el código desde cero.
 """
 import tkinter as tk
 from tkinter import ttk, messagebox
-from typing import Optional, List
-from models import TicketManager, Ticket
+from models import TicketManager
 
-class HelpdeskUI(ttk.Frame):
-
-    def __init__(self, parent: tk.Tk, manager: TicketManager) -> None:
-        super().__init__(parent)
+class HelpdeskUI:
+    # Construye y gestiona los componentes de la interfaz de usuario
+    def __init__(self, root: tk.Tk, manager: TicketManager):
+        self.root = root
         self.manager = manager
+
+        self.root.title("IT Helpdesk System - Gestión de tickets")
+        self.root.geometry("950x650")
+        self.root.minsize(850, 550)
+
+        # Aplicar estilos
+        self.style = ttk.Style()
+        self.style.theme_use("alt")
         
-        parent.title("DataDesk Helpdesk System")
-        parent.geometry("980x600")
-        parent.configure(bg="#F3F4F6") # Fondo de la ventana principal
+        # 1. DEFINICIÓN DE NUEVOS ESTILOS PARA LOS BOTONES
+        # Estilo para Crear Ticket (Verde)
+        self.style.configure("Success.TButton", background="#2ecc71", foreground="white", font=("Segoe UI", 9, "bold"))
+        self.style.map("Success.TButton", background=[("active", "#27ae60")])
         
-        self.pack(fill=tk.BOTH, expand=True, padx=15, pady=15)
-        
-        self._setup_styles()
-        self._build_ui()
+        # Estilo para Cambiar Estado (Azul)
+        self.style.configure("Action.TButton", background="#3498db", foreground="white", font=("Segoe UI", 9, "bold"))
+        self.style.map("Action.TButton", background=[("active", "#2980b9")])
 
-    def _setup_styles(self) -> None:
-        """Define y aplica la paleta de colores y tipografía mediante TTK Styles."""
-        style = ttk.Style()
-        style.theme_use("clam") # Base flexible para sobreescribir estilos
+        # Estilo para Eliminar Ticket (Rojo)
+        self.style.configure("Danger.TButton", background="#e74c3c", foreground="white", font=("Segoe UI", 9, "bold"))
+        self.style.map("Danger.TButton", background=[("active", "#c0392b")])
 
-        # Configuración global de frames y etiquetas de sección
-        style.configure("TFrame", background="#F3F4F6")
-        style.configure("TLabelframe", background="#FFFFFF", bordercolor="#E5E7EB", borderwidth=1, relief="solid")
-        style.configure("TLabelframe.Label", background="#FFFFFF", foreground="#374151", font=("Segoe UI", 10, "bold"))
-        style.configure("TLabel", background="#FFFFFF", foreground="#4B5563", font=("Segoe UI", 9))
+        self._crear_interfaz()
+        self.actualizar_tabla()
 
-        # Configuración del Buscador Dinámico e Inputs
-        style.configure("TEntry", fieldbackground="#F9FAFB", bordercolor="#D1D5DB", lightcolor="#D1D5DB", darkcolor="#D1D5DB")
-        style.configure("TCombobox", fieldbackground="#F9FAFB", bordercolor="#D1D5DB", arrowcolor="#4B5563")
+    def _crear_interfaz(self):
+        # Cabecera
+        header = ttk.Frame(self.root, padding=12)
+        header.pack(fill=tk.X)
+        ttk.Label(
+            header,
+            text="Bienvenido Dashboard de soporte técnico",
+            font=("Segoe UI", 16, "bold")
+        ).pack(side=tk.LEFT)
 
-        # Botones Personalizados por Estados de Acción
-        style.configure("Primary.TButton", font=("Segoe UI", 9, "bold"), background="#2563EB", foreground="#FFFFFF", borderwidth=0, padding=6)
-        style.map("Primary.TButton", background=[("active", "#1D4ED8")])
+        # Contenedor Principal
+        main_frame = ttk.Frame(self.root, padding=10)
+        main_frame.pack(fill=tk.BOTH, expand=True)
 
-        style.configure("Success.TButton", font=("Segoe UI", 9, "bold"), background="#10B981", foreground="#FFFFFF", borderwidth=0, padding=6)
-        style.map("Success.TButton", background=[("active", "#059669")])
+        # Formulario a la izquierda
+        self._crear_formulario(main_frame)
 
-        style.configure("Warning.TButton", font=("Segoe UI", 9, "bold"), background="#F59E0B", foreground="#FFFFFF", borderwidth=0, padding=6)
-        style.map("Warning.TButton", background=[("active", "#D97706")])
+        # Tabla de controles derecha  
+        self._crear_panel_derecho(main_frame)
 
-        style.configure("Danger.TButton", font=("Segoe UI", 9, "bold"), background="#EF4444", foreground="#FFFFFF", borderwidth=0, padding=6)
-        style.map("Danger.TButton", background=[("active", "#DC2626")])
+    def _crear_formulario(self, parent):
+        frame = ttk.LabelFrame(parent, text="Nuevo ticket", padding=15)
+        frame.pack(side=tk.LEFT, fill=tk.Y, padx=(0, 10))  
 
-        # Diseño de la Tabla Avanzada (Treeview)
-        style.configure("Treeview", font=("Segoe UI", 9), rowheight=26, background="#FFFFFF", fieldbackground="#FFFFFF", borderwidth=0)
-        style.configure("Treeview.Heading", font=("Segoe UI", 9, "bold"), background="#F3F4F6", foreground="#374151", borderwidth=1, relief="flat")
-        style.map("Treeview", background=[("selected", "#DBEAFE")], foreground=[("selected", "#1E40AF")])
+        # Campos 
+        ttk.Label(frame, text="Usuario / Solicitante").pack(anchor=tk.W, pady=(0, 5))
+        self.ent_usuario = ttk.Entry(frame, width=25)
+        self.ent_usuario.pack(fill=tk.X, pady=(0, 10))
 
-    def _build_ui(self) -> None:
-        # --- 1. PANEL SUPERIOR (KPIs y Buscador Predictivo) ---
-        top_frame = ttk.LabelFrame(self, text=" Métricas de Rendimiento ", padding=10)
-        top_frame.pack(fill=tk.X, pady=(0, 15))
+        ttk.Label(frame, text="Descripción").pack(anchor=tk.W, pady=(0, 5))
+        self.ent_descripcion = ttk.Entry(frame, width=25)
+        self.ent_descripcion.pack(fill=tk.X, pady=(0, 10))
 
-        # Sub-contenedor interno para alinear métricas
-        metrics_box = ttk.Frame(top_frame)
-        metrics_box.pack(side=tk.LEFT)
+        ttk.Label(frame, text="Categoría").pack(anchor=tk.W, pady=(0, 5))
+        self.cmb_categoria = ttk.Combobox(
+            frame,
+            values=["Hardware", "Software", "Redes/Conectividad", "Accesos/Permisos"],
+            state="readonly"
+        )
+        self.cmb_categoria.set("Hardware")
+        self.cmb_categoria.pack(fill=tk.X, pady=(0, 10))
 
-        self.lbl_met = ttk.Label(metrics_box, text="Cargando métricas...", font=("Segoe UI", 10, "bold"), background="#FFFFFF")
-        self.lbl_met.pack(side=tk.LEFT, padx=5)
+        ttk.Label(frame, text="Prioridad").pack(anchor=tk.W, pady=(0, 5))
+        self.cmb_prioridad = ttk.Combobox(
+            frame,
+            values=["Baja", "Media", "Alta", "Crítica"],
+            state="readonly"
+        )
+        self.cmb_prioridad.set("Baja")
+        self.cmb_prioridad.pack(fill=tk.X, pady=(0, 10))
 
-        # Buscador Predictivo alineado a la derecha
-        search_box = ttk.Frame(top_frame)
-        search_box.pack(side=tk.RIGHT)
-        
-        ttk.Label(search_box, text="Filtrar incidencias:").pack(side=tk.LEFT, padx=(0, 5))
-        self.sv_buscar = tk.StringVar()
-        self.sv_buscar.trace_add("write", lambda *a: self.refresh_table())
-        
-        entry_search = ttk.Entry(search_box, textvariable=self.sv_buscar, width=28)
-        entry_search.pack(side=tk.LEFT)
+        # 2. BOTONES DEL FORMULARIO CON ESTILO APLICADO
+        ttk.Button(frame, text="Crear Ticket", style="Success.TButton", command=self._on_crear).pack(fill=tk.X, pady=(0, 5))
+        ttk.Button(frame, text="Limpiar Campos", command=self._limpiar_formulario).pack(fill=tk.X)
 
-        # --- 2. PANEL CENTRAL (Formulario y Grid de Datos) ---
-        main_body = ttk.Frame(self)
-        main_body.pack(fill=tk.BOTH, expand=True)
+    def _crear_panel_derecho(self, parent):
+        right_frame = ttk.Frame(parent)
+        right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
 
-        # Formulario de Alta
-        form_frame = ttk.LabelFrame(main_body, text=" Registrar Incidencia ", padding=12)
-        form_frame.pack(side=tk.LEFT, fill=tk.Y, padx=(0, 15))
+        # Buscador
+        search_frame = ttk.Frame(right_frame) 
+        search_frame.pack(fill=tk.X, pady=(0, 10))
 
-        ttk.Label(form_frame, text="Usuario Afectado:").pack(anchor=tk.W, pady=(0, 2))
-        self.ent_user = ttk.Entry(form_frame, width=25)
-        self.ent_user.pack(fill=tk.X, pady=(0, 10))
+        ttk.Label(search_frame, text="Filtrar: ").pack(side=tk.LEFT, padx=(0, 5))
+        self.ent_buscar = ttk.Entry(search_frame) 
+        self.ent_buscar.pack(side=tk.LEFT, fill=tk.X, expand=True) 
+        self.ent_buscar.bind("<KeyRelease>", lambda e: self.actualizar_tabla())
 
-        ttk.Label(form_frame, text="Categoría Técnica:").pack(anchor=tk.W, pady=(0, 2))
-        self.cb_cat = ttk.Combobox(form_frame, values=["Hardware", "Software", "Redes"], state="readonly")
-        self.cb_cat.pack(fill=tk.X, pady=(0, 10))
+        # Tabla Treeview
+        tree_frame = ttk.Frame(right_frame)
+        tree_frame.pack(fill=tk.BOTH, expand=True)
 
-        ttk.Label(form_frame, text="Prioridad SLA:").pack(anchor=tk.W, pady=(0, 2))
-        self.cb_prio = ttk.Combobox(form_frame, values=["Baja", "Media", "Alta"], state="readonly")
-        self.cb_prio.pack(fill=tk.X, pady=(0, 10))
+        columns = ("id", "usuario", "descripcion", "categoria", "prioridad", "estado")
+        self.tree = ttk.Treeview(tree_frame, columns=columns, show="headings", selectmode="browse")
 
-        ttk.Label(form_frame, text="Descripción del Problema:").pack(anchor=tk.W, pady=(0, 2))
-        self.txt_desc = tk.Text(form_frame, width=24, height=7, font=("Segoe UI", 9), bg="#F9FAFB", fg="#374151", bd=1, relief="solid", highlightthickness=0)
-        self.txt_desc.pack(fill=tk.BOTH, expand=True, pady=(0, 15))
+        self.tree.heading("id", text="ID")
+        self.tree.heading("usuario", text="Usuario")
+        self.tree.heading("descripcion", text="Descripción")
+        self.tree.heading("categoria", text="Categoría")
+        self.tree.heading("prioridad", text="Prioridad")
+        self.tree.heading("estado", text="Estado")
 
-        ttk.Button(form_frame, text="Guardar Registro", style="Primary.TButton", command=self._add_ticket).pack(fill=tk.X)
+        self.tree.column("id", width=40, anchor=tk.CENTER)
+        self.tree.column("usuario", width=120)
+        self.tree.column("descripcion", width=200)
+        self.tree.column("categoria", width=120)
+        self.tree.column("prioridad", width=80, anchor=tk.CENTER)
+        self.tree.column("estado", width=80, anchor=tk.CENTER)
 
-        # Tabla Interactiva (Treeview)
-        table_frame = ttk.LabelFrame(main_body, text=" Registro General de Tickets ", padding=5)
-        table_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
+        scrollbar = ttk.Scrollbar(tree_frame, orient=tk.VERTICAL, command=self.tree.yview)
+        self.tree.configure(yscroll=scrollbar.set)
 
-        cols = ("id", "user", "cat", "prio", "status", "desc")
-        self.tree = ttk.Treeview(table_frame, columns=cols, show="headings")
-        
-        headers = {"id": "ID", "user": "Usuario", "cat": "Categoría", "prio": "Prioridad", "status": "Estado", "desc": "Descripción"}
-        for k, v in headers.items():
-            self.tree.heading(k, text=v)
-            self.tree.column(k, width=50 if k == "id" else 100 if k != "desc" else 220, anchor=tk.CENTER if k in ["id", "prio", "status"] else tk.W)
-
-        scroll = ttk.Scrollbar(table_frame, orient=tk.VERTICAL, command=self.tree.yview)
-        self.tree.configure(yscrollcommand=scroll.set)
-        
         self.tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        scroll.pack(side=tk.RIGHT, fill=tk.Y)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
-        # --- 3. PANEL INFERIOR (Barra de Acciones Avanzadas) ---
-        bottom_frame = ttk.Frame(self, padding=5)
-        bottom_frame.pack(fill=tk.X, pady=(15, 0))
+        # Botones de acción 
+        actions = ttk.Frame(right_frame, padding=(0, 10, 0, 0))
+        actions.pack(fill=tk.X)
 
-        ttk.Button(bottom_frame, text="Marcar Resuelto", style="Success.TButton", command=lambda: self._change_status("Resuelto")).pack(side=tk.LEFT, padx=5)
-        ttk.Button(bottom_frame, text="Reabrir Ticket", style="Warning.TButton", command=lambda: self._change_status("Pendiente")).pack(side=tk.LEFT, padx=5)
-        ttk.Button(bottom_frame, text="Eliminar Registro", style="Danger.TButton", command=self._delete_ticket).pack(side=tk.RIGHT, padx=5)
+        # 3. BOTONES DE ACCIÓN CON ESTILO APLICADO
+        ttk.Button(actions, text="Cambiar estado", style="Action.TButton", command=self._on_cambiar_estado).pack(side=tk.LEFT, padx=(0, 5))
+        ttk.Button(actions, text="Eliminar Ticket", style="Danger.TButton", command=self._on_eliminar).pack(side=tk.LEFT)
 
-        self.refresh_table()
+        # Métricas
+        self.lbl_stats = ttk.Label(right_frame, text="", font=("Segoe UI", 9, "italic"))
+        self.lbl_stats.pack(anchor=tk.E, pady=(10, 0))
 
-    def refresh_table(self) -> None:
-        self.tree.delete(*self.tree.get_children())
-        query = self.sv_buscar.get().lower()
+    def _on_crear(self):
+        usuario = self.ent_usuario.get().strip()
+        descripcion = self.ent_descripcion.get().strip()
 
-        for t in self.manager.tickets:
-            if any(query in str(val).lower() for val in [t.usuario, t.categoria, t.prioridad, t.estado, t.descripcion]):
-                self.tree.insert("", tk.END, iid=str(t.id), values=(t.id, t.usuario, t.categoria, t.prioridad, t.estado, t.descripcion))
-
-        m = self.manager.metrics()
-        self.lbl_met.config(text=f"📊  Total: {m['total']}   |   🟠  Pendientes: {m['pendientes']}   |   🟢  Resueltos: {m['resueltos']}")
-
-    def _add_ticket(self) -> None:
-        user, cat, prio = self.ent_user.get().strip(), self.cb_cat.get(), self.cb_prio.get()
-        desc = self.txt_desc.get("1.0", tk.END).strip()
-
-        if not (user and cat and prio and desc):
-            messagebox.showwarning("Campos Incompletos", "Por favor, complete todos los campos requeridos.")
+        if not usuario or not descripcion:
+            messagebox.showwarning("Campos Requeridos", "Por favor completa el Usuario y la Descripción")
             return
 
-        self.manager.create(user, desc, cat, prio)
-        self.ent_user.delete(0, tk.END)
-        self.cb_cat.set(''); self.cb_prio.set('')
-        self.txt_desc.delete("1.0", tk.END)
-        self.refresh_table()
+        ticket = self.manager.crear_ticket(
+            usuario=usuario,
+            descripcion=descripcion,
+            categoria=self.cmb_categoria.get(),
+            prioridad=self.cmb_prioridad.get()
+        )
 
-    def _get_selected(self) -> Optional[int]:
-        sel = self.tree.selection()
-        if not sel:
-            messagebox.showwarning("Selección Obligatoria", "Seleccione un ticket del listado para operar.")
-            return None
-        return int(sel[0])
+        messagebox.showinfo("Éxito", f"Ticket #{ticket.id} creado correctamente.")
+        self._limpiar_formulario()
+        self.actualizar_tabla()
 
-    def _change_status(self, n_status: str) -> None:
-        tid = self._get_selected()
-        if tid is not None:
-            self.manager.update_status(tid, n_status)
-            self.refresh_table()
+    def _limpiar_formulario(self):
+        self.ent_usuario.delete(0, tk.END)
+        self.ent_descripcion.delete(0, tk.END)
+        self.cmb_categoria.set("Hardware")
+        self.cmb_prioridad.set("Baja")
 
-    def _delete_ticket(self) -> None:
-        tid = self._get_selected()
-        if tid is not None and messagebox.askyesno("Confirmar Acción", f"¿Está seguro de eliminar permanentemente el ticket ID #{tid}?"):
-            self.manager.delete(tid)
-            self.refresh_table()
+    def _on_cambiar_estado(self):
+        selected = self.tree.selection()
+        if not selected:
+            messagebox.showwarning("Aviso", "Selecciona un ticket primero.")
+            return
+
+        ticket_id = int(self.tree.item(selected[0], "values")[0])
+        self.manager.cambiar_estado(ticket_id)
+        self.actualizar_tabla() 
+
+    def _on_eliminar(self):
+        selected = self.tree.selection()  
+        if not selected:
+            messagebox.showwarning("Aviso", "Selecciona un ticket para eliminar.")
+            return
+        ticket_id = int(self.tree.item(selected[0], "values")[0])
+        if messagebox.askyesno("Confirmar", f"¿Deseas borrar el ticket #{ticket_id}?"):
+            self.manager.eliminar_ticket(ticket_id)
+            self.actualizar_tabla()
+
+    def actualizar_tabla(self):
+        # Limpiar tabla
+        for row in self.tree.get_children():
+            self.tree.delete(row)
+        
+        # Comprobación segura de la existencia del cuadro de búsqueda
+        if hasattr(self, 'ent_buscar'):
+            criterio = self.ent_buscar.get().strip()
+        else:
+            criterio = ""
+            
+        # Llamada correcta al método de búsqueda de models.py
+        tickets = self.manager.actualizar_tabla(criterio)   
+
+        # Insertar filas
+        for t in tickets:
+            self.tree.insert("", tk.END, values=(
+                t.id, t.usuario, t.descripcion, t.categoria, t.prioridad, t.estado
+            ))           
+        
+        # Actualizar las métricas
+        stats = self.manager.obtener_metricas()
+        self.lbl_stats.config(
+            text=f"Total: {stats.get('total', 0)} | Pendientes: {stats.get('pendientes', 0)} | Resueltos: {stats.get('resueltos', 0)}"
+        )
