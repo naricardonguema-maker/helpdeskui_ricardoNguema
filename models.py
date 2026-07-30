@@ -46,7 +46,7 @@ class TicketManager:
         with open(self.path, "w", encoding="utf-8") as f:
             json.dump([t.to_dict() for t in self.tickets], f, indent=4, ensure_ascii=False)
 
-    # Nombre adaptado a views.py (Retorna el ticket creado para el cuadro de éxito)
+    # (Retorna el ticket creado para el cuadro de éxito)
     def crear_ticket(self, usuario: str, descripcion: str, categoria: str, prioridad: str) -> Ticket:
         nid = max([t.id for t in self.tickets], default=0) + 1
         nuevo_ticket = Ticket(nid, usuario, descripcion, categoria, prioridad)
@@ -54,7 +54,7 @@ class TicketManager:
         self.save()
         return nuevo_ticket
 
-    # Nombre adaptado a views.py e implementa el ciclo de estados automáticamente
+    # Implementa el ciclo de estados automáticamente
     def cambiar_estado(self, id_t: int) -> bool:
         for t in self.tickets:
             if t.id == id_t:
@@ -64,13 +64,11 @@ class TicketManager:
                 return True
         return False
 
-    # Nombre adaptado a views.py
     def eliminar_ticket(self, id_t: int) -> bool:
         self.tickets = [t for t in self.tickets if t.id != id_t]
         self.save()
         return True
 
-    # Nombre adaptado a views.py
     def obtener_metricas(self) -> Dict[str, int]:
         return {
             "total": len(self.tickets),
@@ -78,7 +76,7 @@ class TicketManager:
             "resueltos": sum(1 for t in self.tickets if t.estado == "Resuelto")
         }
 
-    # NUEVO MÉTODO requerido por views.py para listar y filtrar en tiempo real
+    # MÉTODO requerido por views.py para listar y filtrar en tiempo real
     def actualizar_tabla(self, criterio: str = "") -> List[Ticket]:
         """Filtra y retorna los tickets según el cuadro de búsqueda."""
         if not criterio:
